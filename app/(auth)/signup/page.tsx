@@ -4,12 +4,10 @@ export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
 import Logo from '@/components/Logo'
 import { Loader2, CheckCircle2 } from 'lucide-react'
 
 export default function SignupPage() {
-  const router = useRouter()
   const supabase = createClient()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -21,7 +19,13 @@ export default function SignupPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/confirm?next=/dashboard`,
+      },
+    })
     if (error) { setError(error.message); setLoading(false) }
     else setDone(true)
   }

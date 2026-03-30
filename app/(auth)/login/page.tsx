@@ -2,27 +2,39 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
 import Logo from '@/components/Logo'
 import { Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
-  const router = useRouter()
   const supabase = createClient()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  useEffect(() => {
+    const queryError = new URLSearchParams(window.location.search).get('error')
+    if (queryError === 'auth_confirm_failed') {
+      setError('Your email confirmation link is invalid or expired. Please sign up again or request a new link.')
+    }
+  }, [])
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) { setError(error.message); setLoading(false) }
-    else router.push('/dashboard')
+    if (error) {
+      if (error.message.toLowerCase().includes('email not confirmed')) {
+        setError('Please confirm your email first. Check your inbox and click the verification link.')
+      } else {
+        setError(error.message)
+      }
+      setLoading(false)
+    }
+    else { window.location.assign('/dashboard') }
   }
 
   return (
